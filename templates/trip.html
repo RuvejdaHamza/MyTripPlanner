@@ -74,11 +74,16 @@
     <div class="result-block">
       <h2>Hotels by budget</h2>
       <div id="hotels-result" class="hotels-grid"></div>
+      <div id="budget-result" class="budget-result"></div>
     </div>
   </div>
 </main>
 
 <script>
+  let currentHotels = [];
+  let currentBudget = 0;
+  let currentDays = 1;
+
   async function planTrip() {
     const destination = document.getElementById("destination").value.trim();
     if (!destination) { alert("Enter a destination!"); return; }
@@ -113,21 +118,7 @@
       document.getElementById("weather-result").innerHTML = data.weather.replace(/\n/g, "<br>");
       document.getElementById("itinerary-result").innerHTML = data.itinerary.replace(/\n/g, "<br>");
 
-      const hotelsDiv = document.getElementById("hotels-result");
-      hotelsDiv.innerHTML = "";
-      data.hotels.forEach(h => {
-        const stars = "\u2605".repeat(h.stars) + "\u2606".repeat(5 - h.stars);
-        hotelsDiv.innerHTML += `
-          <div class="hotel-card">
-            <div class="hotel-stars">${stars}</div>
-            <div class="hotel-name">${h.name}</div>
-            <div class="hotel-location">${h.location}</div>
-            <div class="hotel-price">EUR ${h.price_per_night}<span style="font-size:.75rem;font-weight:400;color:var(--muted)"> / night</span></div>
-            <div class="hotel-total">Total: EUR ${h.total}</div>
-            <div class="hotel-why">${h.why}</div>
-          </div>
-        `;
-      });
+      renderHotels(data.hotels, data.budget, data.days);
 
     } catch (err) {
       document.getElementById("loading").style.display = "none";
@@ -137,6 +128,79 @@
       btn.disabled = false;
       btn.innerHTML = "Generate plan";
     }
+  }
+
+  function renderHotels(hotels, budget, days) {
+    currentHotels = hotels || [];
+    currentBudget = Number(budget) || 0;
+    currentDays = Math.max(Number(days) || 1, 1);
+
+    const hotelsDiv = document.getElementById("hotels-result");
+    document.getElementById("budget-result").innerHTML = "";
+    hotelsDiv.innerHTML = "";
+
+    currentHotels.forEach((h, index) => {
+      const stars = "\u2605".repeat(h.stars) + "\u2606".repeat(5 - h.stars);
+      hotelsDiv.innerHTML += `
+        <button class="hotel-card" type="button" onclick="selectHotel(${index})">
+          <div class="hotel-select-label">Choose hotel</div>
+          <div class="hotel-stars">${stars}</div>
+          <div class="hotel-name">${escapeHtml(h.name)}</div>
+          <div class="hotel-location">${escapeHtml(h.location)}</div>
+          <div class="hotel-price">EUR ${h.price_per_night}<span style="font-size:.75rem;font-weight:400;color:var(--muted)"> / night</span></div>
+          <div class="hotel-total">Total: EUR ${h.total}</div>
+          <div class="hotel-why">${escapeHtml(h.why)}</div>
+        </button>
+      `;
+    });
+  }
+
+  function selectHotel(index) {
+    const hotel = currentHotels[index];
+    if (!hotel) return;
+
+    document.querySelectorAll(".hotel-card").forEach((card, cardIndex) => {
+      card.classList.toggle("selected", cardIndex === index);
+    });
+
+    const hotelTotal = Number(hotel.total) || 0;
+    const remaining = currentBudget - hotelTotal;
+    const dailyBudget = Math.max(0, Math.floor(remaining / currentDays));
+    const statusText = remaining >= 0
+      ? `You still have EUR ${remaining} for food, transport, tickets, and activities.`
+      : `This hotel is EUR ${Math.abs(remaining)} over your total budget.`;
+
+    document.getElementById("budget-result").innerHTML = `
+      <div class="budget-card ${remaining < 0 ? "over-budget" : ""}">
+        <div>
+          <span class="budget-label">Selected hotel</span>
+          <strong>${escapeHtml(hotel.name)}</strong>
+        </div>
+        <div>
+          <span class="budget-label">Hotel cost</span>
+          <strong>EUR ${hotelTotal}</strong>
+        </div>
+        <div>
+          <span class="budget-label">Trip budget</span>
+          <strong>EUR ${currentBudget}</strong>
+        </div>
+        <div>
+          <span class="budget-label">Daily spending left</span>
+          <strong>EUR ${dailyBudget}</strong>
+        </div>
+        <p>${statusText}</p>
+      </div>
+    `;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#039;"
+    }[char]));
   }
 
   function toggleOtherInterest() {
@@ -161,13 +225,17 @@
     ].join(",");
     const marker = `${lat},${lon}`;
     const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${marker}`;
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(marker)}`;
     document.getElementById("map").innerHTML = `
       <iframe
-        title="Map for ${destination}"
+        title="Destination map"
         src="${src}"
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade">
       </iframe>
+      <a class="map-open-link" href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" aria-label="Open destination in Google Maps">
+        <span>Open with Google Maps</span>
+      </a>
     `;
   }
 </script>

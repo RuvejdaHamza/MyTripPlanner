@@ -758,6 +758,7 @@ select:focus {
 }
 
 #map {
+  position: relative;
   height: 360px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -770,6 +771,37 @@ select:focus {
   display: block;
   border: 0;
   filter: saturate(0.92) contrast(1.05) brightness(0.9);
+  pointer-events: none;
+}
+
+.map-open-link {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 1rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.map-open-link span {
+  padding: 0.55rem 0.75rem;
+  background: rgba(5, 8, 22, 0.78);
+  border: 1px solid rgba(238, 244, 255, 0.22);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.map-open-link:hover span,
+.map-open-link:focus-visible span {
+  transform: translateY(-2px);
+  background: rgba(34, 211, 238, 0.18);
+  border-color: rgba(34, 211, 238, 0.55);
 }
 
 .hotels-grid {
@@ -779,10 +811,15 @@ select:focus {
 }
 
 .hotel-card {
+  width: 100%;
   padding: 1rem;
+  color: inherit;
+  text-align: left;
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  cursor: pointer;
+  font: inherit;
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
   animation: fadeUp 260ms ease both;
 }
@@ -791,6 +828,34 @@ select:focus {
   transform: translateY(-3px);
   border-color: rgba(245, 158, 11, 0.45);
   background: var(--amber-soft);
+}
+
+.hotel-card.selected {
+  border-color: rgba(34, 211, 238, 0.72);
+  background: rgba(34, 211, 238, 0.12);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
+}
+
+.hotel-card:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.45);
+  outline-offset: 3px;
+}
+
+.hotel-select-label {
+  float: right;
+  padding: 0.28rem 0.45rem;
+  color: var(--cyan);
+  background: var(--cyan-soft);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.hotel-card.selected .hotel-select-label {
+  color: #06111f;
+  background: linear-gradient(135deg, var(--cyan), var(--amber));
 }
 
 .hotel-stars {
@@ -830,6 +895,50 @@ select:focus {
 
 .hotel-why {
   margin-top: 0.85rem;
+  line-height: 1.6;
+}
+
+.budget-result {
+  margin-top: 1rem;
+}
+
+.budget-card {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  padding: 1rem;
+  background: rgba(34, 211, 238, 0.09);
+  border: 1px solid rgba(34, 211, 238, 0.32);
+  border-radius: var(--radius);
+}
+
+.budget-card.over-budget {
+  background: rgba(251, 113, 133, 0.1);
+  border-color: rgba(251, 113, 133, 0.42);
+}
+
+.budget-card div {
+  min-width: 0;
+}
+
+.budget-label {
+  display: block;
+  margin-bottom: 0.28rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.budget-card strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+}
+
+.budget-card p {
+  grid-column: 1 / -1;
+  color: #d7e2f3;
   line-height: 1.6;
 }
 
@@ -1061,6 +1170,10 @@ select:focus {
   }
 
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .budget-card {
     grid-template-columns: 1fr;
   }
 
