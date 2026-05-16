@@ -5,11 +5,8 @@ import re
 import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
-
-try:
-    import google.generativeai as genai
-except ImportError:
-    genai = None
+from google import genai
+from google.genai.types import HttpOptions
 
 
 load_dotenv()
@@ -39,6 +36,7 @@ def chat():
 @app.post("/api/trip")
 def api_trip():
     payload = request.get_json(silent=True) or {}
+
     destination = clean_text(payload.get("destination")) or "Tirana"
     days = clamp_int(payload.get("days"), 1, 14, 3)
     nights = clamp_int(payload.get("nights"), 1, 30, days)
@@ -46,7 +44,11 @@ def api_trip():
     interests = clean_text(payload.get("interests")) or "culture, food, walking"
 
     place = geocode_destination(destination)
-    coords = {"lat": place["lat"], "lon": place["lon"]}
+    coords = {
+        "lat": place["lat"],
+        "lon": place["lon"]
+    }
+
     weather = get_weather(place, destination)
     hotels = get_hotels(place, destination, budget, nights)
     itinerary = get_itinerary(place, destination, days, nights, budget, interests, weather, hotels)
@@ -66,22 +68,26 @@ def api_trip():
 @app.post("/api/chat")
 def api_chat():
     payload = request.get_json(silent=True) or {}
+
     message = clean_text(payload.get("message"))
     history = clean_text(payload.get("history"))
 
     if not message:
-        return jsonify({"reply": "Write your travel question and I will help you right away."})
+        return jsonify({
+            "reply": "Write your travel question and I will help you right away."
+        })
 
     prompt = (
         "You are a travel assistant. Reply in English, briefly, clearly, and practically.\n"
         f"Conversation history:\n{history[-2000:]}\n\n"
         f"User question: {message}"
     )
+
     reply = ask_gemini(prompt)
 
     if not reply:
         reply = (
-            "I could not connect to AI right now. Try adding GEMINI_API_KEY to your .env file. "
+            "I could not connect to AI right now. Please check Google Cloud ADC and Vertex AI setup. "
             "As a practical next step, tell me your destination, dates, budget, and interests so we can build the plan day by day."
         )
 
@@ -92,12 +98,18 @@ def geocode_destination(destination):
     try:
         response = requests.get(
             "https://nominatim.openstreetmap.org/search",
-            params={"q": destination, "format": "json", "limit": 1},
+            params={
+                "q": destination,
+                "format": "json",
+                "limit": 1
+            },
             headers=HTTP_HEADERS,
             timeout=12,
         )
+
         response.raise_for_status()
         data = response.json()
+
         if data:
             item = data[0]
             return {
@@ -105,10 +117,15 @@ def geocode_destination(destination):
                 "lon": float(item["lon"]),
                 "display_name": item.get("display_name", destination),
             }
+
     except requests.RequestException:
         pass
 
-    return {"lat": 41.3275, "lon": 19.8187, "display_name": destination}
+    return {
+        "lat": 41.3275,
+        "lon": 19.8187,
+        "display_name": destination
+    }
 
 
 def get_weather(place, destination):
@@ -125,8 +142,10 @@ def get_weather(place, destination):
             },
             timeout=12,
         )
+
         response.raise_for_status()
         data = response.json()
+
         current = data.get("current", {})
         daily = data.get("daily", {})
 
@@ -148,11 +167,17 @@ def get_weather(place, destination):
 
         for index, day in enumerate(dates[:5]):
             lines.append(
-                f"- {day}: {weather_label(codes[index])}, {min_t[index]}C - {max_t[index]}C, precipitation chance {rain[index]}%."
+                f"- {day}: {weather_label(codes[index])}, "
+                f"{min_t[index]}C - {max_t[index]}C, "
+                f"precipitation chance {rain[index]}%."
             )
 
-        lines.append("Tip: check the weather again before departure, especially if you plan outdoor activities.")
+        lines.append(
+            "Tip: check the weather again before departure, especially if you plan outdoor activities."
+        )
+
         return "\n".join(lines)
+
     except (requests.RequestException, KeyError, TypeError, IndexError):
         return (
             f"I could not fetch live weather for {destination}. "
@@ -162,14 +187,17 @@ def get_weather(place, destination):
 
 def get_hotels(place, destination, budget, nights):
     osm_hotels = fetch_osm_hotels(place)
+
     hotel_budget = max(120, int(budget * 0.4))
     base_price = max(35, int(hotel_budget / max(nights, 1)))
 
     if osm_hotels:
         hotels = []
+
         for index, hotel in enumerate(osm_hotels[:6]):
             price = max(30, base_price + ((index % 3) - 1) * 18)
             stars = 3 + (index % 3)
+
             hotels.append({
                 "name": hotel["name"],
                 "location": hotel.get("location") or "Near the destination center",
@@ -178,6 +206,7 @@ def get_hotels(place, destination, budget, nights):
                 "total": price * nights,
                 "why": "Found on OpenStreetMap near the destination; the price is an estimate based on your budget."
             })
+
         return hotels
 
     ai_hotels = ask_gemini_json(
@@ -186,13 +215,32 @@ def get_hotels(place, destination, budget, nights):
         f"Destination: {destination}. Total budget: EUR {budget}. Nights: {nights}. "
         "Prices must be realistic estimates in EUR. Write all text in English."
     )
+
     if isinstance(ai_hotels, list) and ai_hotels:
         return normalize_hotels(ai_hotels, nights, base_price)
 
     return normalize_hotels([
-        {"name": f"{destination} Central Stay", "location": "Center", "stars": 4, "price_per_night": base_price, "why": "Estimated option adjusted to your budget."},
-        {"name": f"{destination} Budget Hotel", "location": "Near public transport", "stars": 3, "price_per_night": max(30, base_price - 20), "why": "An economical option to keep the trip affordable."},
-        {"name": f"{destination} Comfort Suites", "location": "Quiet area", "stars": 5, "price_per_night": base_price + 45, "why": "A more comfortable option if you want a higher-end stay."},
+        {
+            "name": f"{destination} Central Stay",
+            "location": "Center",
+            "stars": 4,
+            "price_per_night": base_price,
+            "why": "Estimated option adjusted to your budget."
+        },
+        {
+            "name": f"{destination} Budget Hotel",
+            "location": "Near public transport",
+            "stars": 3,
+            "price_per_night": max(30, base_price - 20),
+            "why": "An economical option to keep the trip affordable."
+        },
+        {
+            "name": f"{destination} Comfort Suites",
+            "location": "Quiet area",
+            "stars": 5,
+            "price_per_night": base_price + 45,
+            "why": "A more comfortable option if you want a higher-end stay."
+        },
     ], nights, base_price)
 
 
@@ -206,6 +254,7 @@ def fetch_osm_hotels(place):
     );
     out center tags 12;
     """
+
     try:
         response = requests.post(
             "https://overpass-api.de/api/interpreter",
@@ -213,28 +262,42 @@ def fetch_osm_hotels(place):
             headers=HTTP_HEADERS,
             timeout=16,
         )
+
         response.raise_for_status()
         data = response.json()
+
     except requests.RequestException:
         return []
 
     hotels = []
     seen = set()
+
     for item in data.get("elements", []):
         tags = item.get("tags", {})
         name = tags.get("name")
+
         if not name or name in seen:
             continue
+
         seen.add(name)
-        location = tags.get("addr:street") or tags.get("addr:city") or tags.get("tourism", "").replace("_", " ").title()
-        hotels.append({"name": name, "location": location})
+
+        location = (
+            tags.get("addr:street")
+            or tags.get("addr:city")
+            or tags.get("tourism", "").replace("_", " ").title()
+        )
+
+        hotels.append({
+            "name": name,
+            "location": location
+        })
+
     return hotels
 
 
 def get_itinerary(place, destination, days, nights, budget, interests, weather, hotels):
     hotel_names = ", ".join(hotel["name"] for hotel in hotels[:3])
-    places = fetch_osm_places(place)
-    place_lines = format_place_lines(places)
+
     prompt = (
         "Create a practical, personalized travel itinerary in English using real places and realistic activities.\n"
         f"Destination: {destination}\n"
@@ -250,12 +313,15 @@ def get_itinerary(place, destination, days, nights, budget, interests, weather, 
         "for the destination, but do not invent fake names. Include one rainy-day alternative and one budget tip "
         "at the end. Do not use markdown tables."
     )
+
     answer = ask_gemini(prompt)
+
     if answer:
         return answer
 
     fallback_places = places or [{"name": f"{destination} city center", "type": "walking area"}]
     rows = []
+
     for day in range(1, days + 1):
         morning = fallback_places[(day - 1) % len(fallback_places)]
         afternoon = fallback_places[day % len(fallback_places)]
@@ -266,8 +332,11 @@ def get_itinerary(place, destination, days, nights, budget, interests, weather, 
             f"Afternoon: spend 2-3 hours around {afternoon['name']} ({afternoon['type']}) with time for photos, local food, or a guided visit. Transport: public transport or taxi if it is far.\n"
             f"Evening: go near {evening['name']} ({evening['type']}) for dinner and a relaxed walk in a lively central area."
         )
-    rows.append("Rainy-day alternative: choose a museum, gallery, covered market, or cafe area from the plan and move outdoor walks to the clearest part of the day.")
-    rows.append("Budget tip: keep about 40% of your budget for accommodation and use the rest for food, transport, tickets, and activities.")
+
+    rows.append(
+        "Budget tip: keep about 40% of your budget for accommodation and use the rest for food, transport, and activities."
+    )
+
     return "\n\n".join(rows)
 
 
@@ -331,39 +400,66 @@ def format_place_lines(places):
 
 
 def ask_gemini(prompt):
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_GEMINI_API_KEY")
-    if not api_key or genai is None:
-        return ""
-
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-1.5-flash"))
-        response = model.generate_content(prompt)
+        project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "mytriplanner")
+        location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+
+        client = genai.Client(
+            vertexai=True,
+            project=project_id,
+            location=location,
+            http_options=HttpOptions(api_version="v1")
+        )
+
+        response = client.models.generate_content(
+            model=model_name,
+            contents=prompt
+        )
+
         return (getattr(response, "text", "") or "").strip()
-    except Exception:
+
+    except Exception as error:
+        print(f"Gemini / Vertex AI error: {error}")
         return ""
 
 
 def ask_gemini_json(prompt):
     text = ask_gemini(prompt)
+
     if not text:
         return None
 
     match = re.search(r"\[.*\]", text, re.DOTALL)
+
     if not match:
         return None
 
     try:
         return json.loads(match.group(0))
+
     except json.JSONDecodeError:
         return None
 
 
 def normalize_hotels(items, nights, fallback_price):
     hotels = []
+
     for index, item in enumerate(items[:6]):
-        price = clamp_int(item.get("price_per_night"), 30, 10000, fallback_price + index * 12)
-        stars = clamp_int(item.get("stars"), 1, 5, 3 + (index % 3))
+        price = clamp_int(
+            item.get("price_per_night"),
+            30,
+            10000,
+            fallback_price + index * 12
+        )
+
+        stars = clamp_int(
+            item.get("stars"),
+            1,
+            5,
+            3 + (index % 3)
+        )
+
         hotels.append({
             "name": clean_text(item.get("name")) or "Hotel",
             "location": clean_text(item.get("location")) or "Convenient location",
@@ -372,6 +468,7 @@ def normalize_hotels(items, nights, fallback_price):
             "total": price * nights,
             "why": clean_text(item.get("why")) or "Option adjusted to your budget.",
         })
+
     return hotels
 
 
@@ -397,20 +494,24 @@ def weather_label(code):
         82: "heavy showers",
         95: "thunderstorm",
     }
+
     return labels.get(code, "variable weather")
 
 
 def clamp_int(value, minimum, maximum, default):
     try:
         number = int(value)
+
     except (TypeError, ValueError):
         return default
+
     return max(minimum, min(maximum, number))
 
 
 def clean_text(value):
     if value is None:
         return ""
+
     return str(value).strip()
 
 
