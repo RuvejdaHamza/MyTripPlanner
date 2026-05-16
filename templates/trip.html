@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Planner — MyTripPlanner{% endblock %}
+{% block title %}Planner - MyTripPlanner{% endblock %}
 {% set active = 'trip' %}
 
 {% block head %}
@@ -9,11 +9,11 @@
 {% block content %}
 <main>
   <div class="page-header">
-    <h1>Planifiko Udhëtimin</h1>
-    <p>Plotëso fushat — AI gjeneron gjithçka njëkohësisht.</p>
+    <span class="eyebrow">Trip planner</span>
+    <h1>Planifiko udhetimin</h1>
+    <p>Ploteso fushat dhe AI gjeneron itinerarin, hotelet dhe motin ne te njejten kohe.</p>
   </div>
 
-  <!-- Forma -->
   <div class="form-card">
     <div class="form-grid">
       <div class="form-group form-wide">
@@ -21,62 +21,56 @@
         <input id="destination" placeholder="p.sh. Roma, Itali" />
       </div>
       <div class="form-group">
-        <label>Numri i Ditëve</label>
+        <label>Numri i diteve</label>
         <input id="days" type="number" value="3" min="1" max="14" />
       </div>
       <div class="form-group">
-        <label>Netë Hotel</label>
+        <label>Nete hotel</label>
         <input id="nights" type="number" value="3" min="1" />
       </div>
       <div class="form-group">
-        <label>Buxheti Total (€)</label>
+        <label>Buxheti total (EUR)</label>
         <input id="budget" type="number" placeholder="p.sh. 1200" />
       </div>
       <div class="form-group">
         <label>Interesat</label>
-        <input id="interests" placeholder="histori, ushqim, natyrë..." />
+        <input id="interests" placeholder="histori, ushqim, natyre..." />
       </div>
     </div>
-    <button class="submit-btn" onclick="planTrip()">
-      ✦ Gjenero Planin
-    </button>
+    <button class="submit-btn" onclick="planTrip()">Gjenero planin</button>
   </div>
 
-  <!-- Loading -->
   <div class="loading" id="loading">
     <div class="loader"></div>
     <p>Duke gjeneruar itinerarin, hotelet dhe motin...</p>
   </div>
 
-  <!-- Rezultatet -->
   <div class="results" id="results">
-
     <div class="result-block">
-      <h2>📍 Destinacioni në Hartë</h2>
+      <h2>Destinacioni ne harte</h2>
       <div id="map"></div>
     </div>
 
     <div class="result-block">
-      <h2>🌤️ Moti & Këshilla</h2>
+      <h2>Moti dhe keshilla</h2>
       <div id="weather-result"></div>
     </div>
 
     <div class="result-block">
-      <h2>🗺️ Itinerari Ditor</h2>
+      <h2>Itinerari ditor</h2>
       <div id="itinerary-result"></div>
     </div>
 
     <div class="result-block">
-      <h2>🏨 Hotele sipas Buxhetit</h2>
+      <h2>Hotele sipas buxhetit</h2>
       <div id="hotels-result" class="hotels-grid"></div>
     </div>
-
   </div>
 </main>
 
 <script>
   let googleMap = null;
-  let marker   = null;
+  let marker = null;
 
   async function planTrip() {
     const destination = document.getElementById("destination").value.trim();
@@ -86,19 +80,19 @@
     btn.disabled = true;
     btn.textContent = "Duke gjeneruar...";
 
-    document.getElementById("loading").style.display  = "block";
-    document.getElementById("results").style.display  = "none";
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("results").style.display = "none";
 
     try {
-      const res  = await fetch("/api/trip", {
-        method:  "POST",
+      const res = await fetch("/api/trip", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           destination: destination,
-          days:        document.getElementById("days").value,
-          interests:   document.getElementById("interests").value,
-          budget:      document.getElementById("budget").value,
-          nights:      document.getElementById("nights").value
+          days: document.getElementById("days").value,
+          interests: document.getElementById("interests").value,
+          budget: document.getElementById("budget").value,
+          nights: document.getElementById("nights").value
         })
       });
 
@@ -107,21 +101,21 @@
       document.getElementById("loading").style.display = "none";
       document.getElementById("results").style.display = "block";
 
-      /* ── Google Maps ── */
       const coords = { lat: data.coords.lat, lng: data.coords.lon };
 
       if (!googleMap) {
         googleMap = new google.maps.Map(document.getElementById("map"), {
-          center: coords, zoom: 13,
+          center: coords,
+          zoom: 13,
           disableDefaultUI: true,
           zoomControl: true,
           styles: [
-            { elementType: "geometry",            stylers: [{ color: "#1a1f2e" }] },
-            { elementType: "labels.text.stroke",  stylers: [{ color: "#1a1f2e" }] },
-            { elementType: "labels.text.fill",    stylers: [{ color: "#8a9bb0" }] },
-            { featureType: "road",  elementType: "geometry", stylers: [{ color: "#2c3347" }] },
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#111827" }] },
-            { featureType: "poi",   stylers: [{ visibility: "off" }] }
+            { elementType: "geometry", stylers: [{ color: "#111827" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#111827" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
+            { featureType: "road", elementType: "geometry", stylers: [{ color: "#273044" }] },
+            { featureType: "water", elementType: "geometry", stylers: [{ color: "#07111f" }] },
+            { featureType: "poi", stylers: [{ visibility: "off" }] }
           ]
         });
       } else {
@@ -131,40 +125,34 @@
 
       if (marker) marker.setMap(null);
       marker = new google.maps.Marker({
-        position:  coords,
-        map:       googleMap,
-        title:     data.destination,
+        position: coords,
+        map: googleMap,
+        title: data.destination,
         animation: google.maps.Animation.DROP,
         icon: {
-          path:        google.maps.SymbolPath.CIRCLE,
-          scale:       10,
-          fillColor:   "#D4963A",
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: "#22d3ee",
           fillOpacity: 1,
-          strokeColor: "#F0BE72",
+          strokeColor: "#f8fafc",
           strokeWeight: 2
         }
       });
 
-      /* ── Moti ── */
-      document.getElementById("weather-result").innerHTML =
-        data.weather.replace(/\n/g, "<br>");
+      document.getElementById("weather-result").innerHTML = data.weather.replace(/\n/g, "<br>");
+      document.getElementById("itinerary-result").innerHTML = data.itinerary.replace(/\n/g, "<br>");
 
-      /* ── Itinerari ── */
-      document.getElementById("itinerary-result").innerHTML =
-        data.itinerary.replace(/\n/g, "<br>");
-
-      /* ── Hotelet ── */
       const hotelsDiv = document.getElementById("hotels-result");
       hotelsDiv.innerHTML = "";
       data.hotels.forEach(h => {
-        const stars = "★".repeat(h.stars) + "☆".repeat(5 - h.stars);
+        const stars = "\u2605".repeat(h.stars) + "\u2606".repeat(5 - h.stars);
         hotelsDiv.innerHTML += `
           <div class="hotel-card">
             <div class="hotel-stars">${stars}</div>
             <div class="hotel-name">${h.name}</div>
-            <div class="hotel-location">📍 ${h.location}</div>
-            <div class="hotel-price">€${h.price_per_night}<span style="font-size:.75rem;font-weight:400;color:var(--muted)"> / natë</span></div>
-            <div class="hotel-total">Total: €${h.total}</div>
+            <div class="hotel-location">${h.location}</div>
+            <div class="hotel-price">EUR ${h.price_per_night}<span style="font-size:.75rem;font-weight:400;color:var(--muted)"> / nate</span></div>
+            <div class="hotel-total">Total: EUR ${h.total}</div>
             <div class="hotel-why">${h.why}</div>
           </div>
         `;
@@ -172,11 +160,11 @@
 
     } catch (err) {
       document.getElementById("loading").style.display = "none";
-      alert("Gabim. Kontrollo lidhjen dhe provo sërish.");
+      alert("Gabim. Kontrollo lidhjen dhe provo serish.");
       console.error(err);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = "✦ Gjenero Planin";
+      btn.innerHTML = "Gjenero planin";
     }
   }
 </script>

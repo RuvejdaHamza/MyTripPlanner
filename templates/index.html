@@ -1,49 +1,77 @@
 {% extends "base.html" %}
-{% block title %}MyTripPlanner — Planifiko Udhëtimin{% endblock %}
+{% block title %}MyTripPlanner - Planifiko Udhetimin{% endblock %}
 
 {% block content %}
-
-<!-- ── HERO ─────────────────────────────── -->
 <section class="hero">
-  <div class="hero-tag">✦ Powered by Gemini AI</div>
+  <div class="hero-copy">
+    <div class="eyebrow">AI travel studio</div>
+    <h1>Planifiko netet, rruget dhe buxhetin ne nje vend.</h1>
+    <p>
+      Shkruaj destinacionin, ditet dhe interesat. MyTripPlanner krijon nje itinerar te qarte,
+      sugjeron hotele dhe te jep keshilla per motin e udhetimit.
+    </p>
+    <div class="hero-actions">
+      <a href="/trip" class="btn-primary">Fillo planin</a>
+      <a href="/chat" class="btn-ghost">Pyet asistentin</a>
+    </div>
+  </div>
 
-  <h1>Udhëto me <em>stil,</em><br>planifiko me AI.</h1>
-
-  <p>Fut destinacionin dhe buxhetin — brenda sekondave merr itinerarin, hotelet dhe këshillat për udhëtimin tënd.</p>
-
-  <div class="hero-actions">
-    <a href="/trip" class="btn-primary">Fillo Planifikimin →</a>
-    <a href="/chat" class="btn-ghost">Chat me AI</a>
+  <div class="hero-panel" aria-label="Travel plan preview">
+    <div class="panel-topline">
+      <span>Live itinerary</span>
+      <span class="status-dot">Ready</span>
+    </div>
+    <div class="route-card">
+      <div>
+        <span class="small-label">Destination</span>
+        <strong>Tokyo, Japan</strong>
+      </div>
+      <div class="route-line"></div>
+      <div>
+        <span class="small-label">Budget</span>
+        <strong>EUR 1,450</strong>
+      </div>
+    </div>
+    <div class="mini-map">
+      <span class="map-pin pin-one"></span>
+      <span class="map-pin pin-two"></span>
+      <span class="map-path"></span>
+    </div>
+    <div class="stats-row">
+      <div><strong>5</strong><span>dite</span></div>
+      <div><strong>3</strong><span>hotele</span></div>
+      <div><strong>12</strong><span>aktivitete</span></div>
+    </div>
   </div>
 </section>
 
-<!-- ── FEATURES ──────────────────────────── -->
 <section class="features-section">
-  <div class="features-label">✦ Çfarë ofron</div>
-  <div class="features-grid">
+  <div class="section-heading">
+    <span class="eyebrow">Cfare ofron</span>
+    <h2>Nje plan udhetimi qe duket bukur dhe punon shpejt.</h2>
+  </div>
 
+  <div class="features-grid">
     <a href="/trip" class="feature-card">
-      <span class="feature-icon">🗺️</span>
-      <span class="feature-arrow">↗</span>
+      <span class="feature-icon">01</span>
+      <span class="feature-arrow">-></span>
       <h3>Itinerar AI</h3>
-      <p>Plani ditor i personalizuar bazuar në interesat dhe numrin e ditëve.</p>
+      <p>Plani ditor ndertohet sipas destinacionit, diteve dhe interesave qe zgjedh.</p>
     </a>
 
     <a href="/trip" class="feature-card">
-      <span class="feature-icon">🏨</span>
-      <span class="feature-arrow">↗</span>
-      <h3>Hotele sipas Buxhetit</h3>
-      <p>Rekomandimet më të mira brenda buxhetit tënd — 40% e buxhetit total.</p>
+      <span class="feature-icon">02</span>
+      <span class="feature-arrow">-></span>
+      <h3>Hotele me buxhet</h3>
+      <p>Sugjerime hoteli qe ruajne balancen mes cmimit, lokacionit dhe komoditetit.</p>
     </a>
 
     <a href="/chat" class="feature-card">
-      <span class="feature-icon">💬</span>
-      <span class="feature-arrow">↗</span>
+      <span class="feature-icon">03</span>
+      <span class="feature-arrow">-></span>
       <h3>Travel Assistant</h3>
-      <p>Pyet çdo gjë — viza, transport, mot, kultura. Përgjigje të menjëhershme.</p>
+      <p>Pyet per viza, transport, kulture, mot ose ide spontane gjate planifikimit.</p>
     </a>
-
   </div>
 </section>
-
 {% endblock %}

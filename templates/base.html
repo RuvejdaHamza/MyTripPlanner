@@ -8,16 +8,21 @@
   {% block head %}{% endblock %}
 </head>
 <body>
+  <div class="site-bg" aria-hidden="true"></div>
 
-<nav>
-  <a href="/" class="nav-logo">MyTripPlanner</a>
-  <div class="nav-links">
-    <a href="/trip"  {% if active == 'trip'  %}class="active"{% endif %}>Planner</a>
-    <a href="/chat"  {% if active == 'chat'  %}class="active"{% endif %}>Chat</a>
-  </div>
-</nav>
+  <nav class="top-nav">
+    <a href="/" class="nav-logo">
+      <span class="logo-mark">
+        <span class="logo-plane"></span>
+      </span>
+      <span>MyTripPlanner</span>
+    </a>
+    <div class="nav-links">
+      <a href="/trip" {% if active == 'trip' %}class="active"{% endif %}>Planner</a>
+      <a href="/chat" {% if active == 'chat' %}class="active"{% endif %}>Chat</a>
+    </div>
+  </nav>
 
-{% block content %}{% endblock %}
-
+  {% block content %}{% endblock %}
 </body>
 </html>
