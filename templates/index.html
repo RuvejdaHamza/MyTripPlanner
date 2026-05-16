@@ -1,22 +1,30 @@
 {% extends "base.html" %}
-{% block title %}MyTripPlanner - Planifiko Udhetimin{% endblock %}
+{% block title %}MyTripPlanner - Plan Your Trip{% endblock %}
 
 {% block content %}
 <section class="hero">
-  <div class="hero-copy">
+  <div class="hero-heading">
     <div class="eyebrow">AI travel studio</div>
-    <h1>Planifiko netet, rruget dhe buxhetin ne nje vend.</h1>
-    <p>
-      Shkruaj destinacionin, ditet dhe interesat. MyTripPlanner krijon nje itinerar te qarte,
-      sugjeron hotele dhe te jep keshilla per motin e udhetimit.
-    </p>
-    <div class="hero-actions">
-      <a href="/trip" class="btn-primary">Fillo planin</a>
-      <a href="/chat" class="btn-ghost">Pyet asistentin</a>
-    </div>
+    <h1>Plan smarter trips in one place.</h1>
   </div>
 
-  <div class="hero-panel" aria-label="Travel plan preview">
+  <div class="hero-lower">
+    <div class="hero-copy">
+      <div class="hero-brand-text">
+        <span>MyTripPlanner</span>
+        <strong>AI-powered journeys, built around you.</strong>
+      </div>
+      <p>
+        Enter your destination, dates, and interests. MyTripPlanner builds a clear itinerary,
+      recommends hotels, and gives you practical travel weather tips.
+    </p>
+    <div class="hero-actions">
+      <a href="/trip" class="btn-primary">Start planning</a>
+      <a href="/chat" class="btn-ghost">Ask assistant</a>
+    </div>
+    </div>
+
+    <div class="hero-panel" aria-label="Travel plan preview">
     <div class="panel-topline">
       <span>Live itinerary</span>
       <span class="status-dot">Ready</span>
@@ -38,39 +46,40 @@
       <span class="map-path"></span>
     </div>
     <div class="stats-row">
-      <div><strong>5</strong><span>dite</span></div>
-      <div><strong>3</strong><span>hotele</span></div>
-      <div><strong>12</strong><span>aktivitete</span></div>
+      <div><strong>5</strong><span>days</span></div>
+      <div><strong>3</strong><span>hotels</span></div>
+      <div><strong>12</strong><span>activities</span></div>
+    </div>
     </div>
   </div>
 </section>
 
 <section class="features-section">
   <div class="section-heading">
-    <span class="eyebrow">Cfare ofron</span>
-    <h2>Nje plan udhetimi qe duket bukur dhe punon shpejt.</h2>
+    <span class="eyebrow">What it offers</span>
+    <h2>A travel plan that looks polished and works fast.</h2>
   </div>
 
   <div class="features-grid">
     <a href="/trip" class="feature-card">
       <span class="feature-icon">01</span>
       <span class="feature-arrow">-></span>
-      <h3>Itinerar AI</h3>
-      <p>Plani ditor ndertohet sipas destinacionit, diteve dhe interesave qe zgjedh.</p>
+      <h3>AI itinerary</h3>
+      <p>Your daily plan is built around the destination, trip length, and interests you choose.</p>
     </a>
 
     <a href="/trip" class="feature-card">
       <span class="feature-icon">02</span>
       <span class="feature-arrow">-></span>
-      <h3>Hotele me buxhet</h3>
-      <p>Sugjerime hoteli qe ruajne balancen mes cmimit, lokacionit dhe komoditetit.</p>
+      <h3>Budget hotels</h3>
+      <p>Hotel suggestions that balance price, location, and comfort.</p>
     </a>
 
     <a href="/chat" class="feature-card">
       <span class="feature-icon">03</span>
       <span class="feature-arrow">-></span>
       <h3>Travel Assistant</h3>
-      <p>Pyet per viza, transport, kulture, mot ose ide spontane gjate planifikimit.</p>
+      <p>Ask about visas, transport, culture, weather, or spontaneous ideas while planning.</p>
     </a>
   </div>
 </section>

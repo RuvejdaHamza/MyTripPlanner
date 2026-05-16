@@ -6,25 +6,25 @@
 <main>
   <div class="page-header">
     <span class="eyebrow">Travel assistant</span>
-    <h1>Pyet per udhetimin tend</h1>
-    <p>Merr pergjigje per destinacione, viza, transport, hotele, kulture dhe mot.</p>
+    <h1>Ask about your trip</h1>
+    <p>Get answers about destinations, visas, transport, hotels, culture, and weather.</p>
   </div>
 
   <div class="chat-outer">
     <div id="messages">
       <div class="msg ai">
-        Mire se vini! Jam asistenti juaj i udhetimit.<br>
-        Me pyesni per destinacione, viza, transport, hotele, kulture, mot ose ide per itinerar.
+        Welcome! I am your travel assistant.<br>
+        Ask me about destinations, visas, transport, hotels, culture, weather, or itinerary ideas.
       </div>
     </div>
 
     <div class="chat-input-row">
       <input
         id="user-input"
-        placeholder="Shkruaj pyetjen dhe shtyp Enter..."
+        placeholder="Type your question and press Enter..."
         onkeydown="if(event.key==='Enter' && !event.shiftKey) sendMsg()"
       />
-      <button class="send-btn" onclick="sendMsg()">Dergo</button>
+      <button class="send-btn" onclick="sendMsg()">Send</button>
     </div>
   </div>
 </main>
@@ -55,7 +55,7 @@
       typing.innerHTML = data.reply.replace(/\n/g, "<br>");
 
     } catch (err) {
-      typing.innerHTML = "Ndodhi nje gabim. Provo serish.";
+      typing.innerHTML = "Something went wrong. Please try again.";
     }
   }
 

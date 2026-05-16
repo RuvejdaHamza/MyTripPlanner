@@ -2,83 +2,90 @@
 {% block title %}Planner - MyTripPlanner{% endblock %}
 {% set active = 'trip' %}
 
-{% block head %}
-<script src="https://maps.googleapis.com/maps/api/js?key={{ maps_key }}"></script>
-{% endblock %}
-
 {% block content %}
 <main>
   <div class="page-header">
     <span class="eyebrow">Trip planner</span>
-    <h1>Planifiko udhetimin</h1>
-    <p>Ploteso fushat dhe AI gjeneron itinerarin, hotelet dhe motin ne te njejten kohe.</p>
+    <h1>Plan your trip</h1>
+    <p>Fill in the details and AI generates the itinerary, hotels, and weather in one flow.</p>
   </div>
 
   <div class="form-card">
     <div class="form-grid">
       <div class="form-group form-wide">
-        <label>Destinacioni</label>
-        <input id="destination" placeholder="p.sh. Roma, Itali" />
+        <label>Destination</label>
+        <input id="destination" placeholder="e.g. Rome, Italy" />
       </div>
       <div class="form-group">
-        <label>Numri i diteve</label>
+        <label>Number of days</label>
         <input id="days" type="number" value="3" min="1" max="14" />
       </div>
       <div class="form-group">
-        <label>Nete hotel</label>
+        <label>Hotel nights</label>
         <input id="nights" type="number" value="3" min="1" />
       </div>
       <div class="form-group">
-        <label>Buxheti total (EUR)</label>
-        <input id="budget" type="number" placeholder="p.sh. 1200" />
+        <label>Total budget (EUR)</label>
+        <input id="budget" type="number" placeholder="e.g. 1200" />
       </div>
       <div class="form-group">
-        <label>Interesat</label>
-        <input id="interests" placeholder="histori, ushqim, natyre..." />
+        <label>Interests</label>
+        <select id="interests" onchange="toggleOtherInterest()">
+          <option value="history, museums, architecture">History & museums</option>
+          <option value="food, restaurants, local markets">Food & local cuisine</option>
+          <option value="nature, parks, scenic walks">Nature & scenic views</option>
+          <option value="beaches, relaxation, sunsets">Beaches & relaxation</option>
+          <option value="nightlife, bars, music">Nightlife & music</option>
+          <option value="shopping, fashion, city walks">Shopping & city walks</option>
+          <option value="family activities, easy transport, safe areas">Family friendly</option>
+          <option value="adventure, hiking, outdoor activities">Adventure & outdoors</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group form-wide other-interest" id="other-interest-group">
+        <label>Custom interest</label>
+        <input id="other-interest" placeholder="e.g. photography, football, hidden gems..." />
       </div>
     </div>
-    <button class="submit-btn" onclick="planTrip()">Gjenero planin</button>
+    <button class="submit-btn" onclick="planTrip()">Generate plan</button>
   </div>
 
   <div class="loading" id="loading">
     <div class="loader"></div>
-    <p>Duke gjeneruar itinerarin, hotelet dhe motin...</p>
+    <p>Generating your itinerary, hotels, and weather...</p>
   </div>
 
   <div class="results" id="results">
     <div class="result-block">
-      <h2>Destinacioni ne harte</h2>
+      <h2>Destination map</h2>
       <div id="map"></div>
     </div>
 
     <div class="result-block">
-      <h2>Moti dhe keshilla</h2>
+      <h2>Weather and tips</h2>
       <div id="weather-result"></div>
     </div>
 
     <div class="result-block">
-      <h2>Itinerari ditor</h2>
+      <h2>Daily itinerary</h2>
       <div id="itinerary-result"></div>
     </div>
 
     <div class="result-block">
-      <h2>Hotele sipas buxhetit</h2>
+      <h2>Hotels by budget</h2>
       <div id="hotels-result" class="hotels-grid"></div>
     </div>
   </div>
 </main>
 
 <script>
-  let googleMap = null;
-  let marker = null;
-
   async function planTrip() {
     const destination = document.getElementById("destination").value.trim();
-    if (!destination) { alert("Shkruaj destinacionin!"); return; }
+    if (!destination) { alert("Enter a destination!"); return; }
 
     const btn = document.querySelector(".submit-btn");
     btn.disabled = true;
-    btn.textContent = "Duke gjeneruar...";
+    btn.textContent = "Generating...";
 
     document.getElementById("loading").style.display = "block";
     document.getElementById("results").style.display = "none";
@@ -90,7 +97,7 @@
         body: JSON.stringify({
           destination: destination,
           days: document.getElementById("days").value,
-          interests: document.getElementById("interests").value,
+          interests: getSelectedInterests(),
           budget: document.getElementById("budget").value,
           nights: document.getElementById("nights").value
         })
@@ -101,43 +108,7 @@
       document.getElementById("loading").style.display = "none";
       document.getElementById("results").style.display = "block";
 
-      const coords = { lat: data.coords.lat, lng: data.coords.lon };
-
-      if (!googleMap) {
-        googleMap = new google.maps.Map(document.getElementById("map"), {
-          center: coords,
-          zoom: 13,
-          disableDefaultUI: true,
-          zoomControl: true,
-          styles: [
-            { elementType: "geometry", stylers: [{ color: "#111827" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#111827" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
-            { featureType: "road", elementType: "geometry", stylers: [{ color: "#273044" }] },
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#07111f" }] },
-            { featureType: "poi", stylers: [{ visibility: "off" }] }
-          ]
-        });
-      } else {
-        googleMap.setCenter(coords);
-        googleMap.setZoom(13);
-      }
-
-      if (marker) marker.setMap(null);
-      marker = new google.maps.Marker({
-        position: coords,
-        map: googleMap,
-        title: data.destination,
-        animation: google.maps.Animation.DROP,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#22d3ee",
-          fillOpacity: 1,
-          strokeColor: "#f8fafc",
-          strokeWeight: 2
-        }
-      });
+      renderMap(data.coords.lat, data.coords.lon, data.destination);
 
       document.getElementById("weather-result").innerHTML = data.weather.replace(/\n/g, "<br>");
       document.getElementById("itinerary-result").innerHTML = data.itinerary.replace(/\n/g, "<br>");
@@ -151,7 +122,7 @@
             <div class="hotel-stars">${stars}</div>
             <div class="hotel-name">${h.name}</div>
             <div class="hotel-location">${h.location}</div>
-            <div class="hotel-price">EUR ${h.price_per_night}<span style="font-size:.75rem;font-weight:400;color:var(--muted)"> / nate</span></div>
+            <div class="hotel-price">EUR ${h.price_per_night}<span style="font-size:.75rem;font-weight:400;color:var(--muted)"> / night</span></div>
             <div class="hotel-total">Total: EUR ${h.total}</div>
             <div class="hotel-why">${h.why}</div>
           </div>
@@ -160,12 +131,44 @@
 
     } catch (err) {
       document.getElementById("loading").style.display = "none";
-      alert("Gabim. Kontrollo lidhjen dhe provo serish.");
+      alert("Something went wrong. Check your connection and try again.");
       console.error(err);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = "Gjenero planin";
+      btn.innerHTML = "Generate plan";
     }
+  }
+
+  function toggleOtherInterest() {
+    const selected = document.getElementById("interests").value;
+    const otherGroup = document.getElementById("other-interest-group");
+    otherGroup.style.display = selected === "other" ? "flex" : "none";
+  }
+
+  function getSelectedInterests() {
+    const selected = document.getElementById("interests").value;
+    if (selected !== "other") return selected;
+    return document.getElementById("other-interest").value.trim() || "custom travel interests";
+  }
+
+  function renderMap(lat, lon, destination) {
+    const delta = 0.04;
+    const bbox = [
+      Number(lon) - delta,
+      Number(lat) - delta,
+      Number(lon) + delta,
+      Number(lat) + delta
+    ].join(",");
+    const marker = `${lat},${lon}`;
+    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${marker}`;
+    document.getElementById("map").innerHTML = `
+      <iframe
+        title="Map for ${destination}"
+        src="${src}"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    `;
   }
 </script>
 {% endblock %}
