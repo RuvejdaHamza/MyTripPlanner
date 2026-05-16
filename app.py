@@ -49,7 +49,7 @@ def api_trip():
     coords = {"lat": place["lat"], "lon": place["lon"]}
     weather = get_weather(place, destination)
     hotels = get_hotels(place, destination, budget, nights)
-    itinerary = get_itinerary(destination, days, nights, budget, interests, weather, hotels)
+    itinerary = get_itinerary(place, destination, days, nights, budget, interests, weather, hotels)
 
     return jsonify({
         "destination": place.get("display_name") or destination,
@@ -57,6 +57,9 @@ def api_trip():
         "weather": weather,
         "itinerary": itinerary,
         "hotels": hotels,
+        "budget": budget,
+        "days": days,
+        "nights": nights,
     })
 
 
@@ -228,32 +231,103 @@ def fetch_osm_hotels(place):
     return hotels
 
 
-def get_itinerary(destination, days, nights, budget, interests, weather, hotels):
+def get_itinerary(place, destination, days, nights, budget, interests, weather, hotels):
     hotel_names = ", ".join(hotel["name"] for hotel in hotels[:3])
+    places = fetch_osm_places(place)
+    place_lines = format_place_lines(places)
     prompt = (
-        "Create a practical, personalized travel itinerary in English.\n"
+        "Create a practical, personalized travel itinerary in English using real places and realistic activities.\n"
         f"Destination: {destination}\n"
         f"Days: {days}, nights: {nights}, total budget: EUR {budget}\n"
         f"Interests: {interests}\n"
         f"Weather: {weather[:900]}\n"
         f"Hotels/accommodation options: {hotel_names}\n"
-        "Structure each day with Morning, Afternoon, and Evening. "
-        "Include one budget tip at the end. Do not use markdown tables."
+        f"Real nearby places from OpenStreetMap:\n{place_lines}\n"
+        "Structure each day with Day 1, Day 2, etc. and Morning, Afternoon, Evening. "
+        "For each part of the day include at least one named place when available, a concrete activity, "
+        "estimated duration, and a simple transport note such as walk, metro, bus, taxi, or short ride. "
+        "Use the real nearby places above first. If there are not enough places, add well-known real places "
+        "for the destination, but do not invent fake names. Include one rainy-day alternative and one budget tip "
+        "at the end. Do not use markdown tables."
     )
     answer = ask_gemini(prompt)
     if answer:
         return answer
 
+    fallback_places = places or [{"name": f"{destination} city center", "type": "walking area"}]
     rows = []
     for day in range(1, days + 1):
+        morning = fallback_places[(day - 1) % len(fallback_places)]
+        afternoon = fallback_places[day % len(fallback_places)]
+        evening = fallback_places[(day + 1) % len(fallback_places)]
         rows.append(
             f"Day {day}\n"
-            f"Morning: explore a key area in {destination}.\n"
-            f"Afternoon: choose an activity around your interests: {interests}.\n"
-            "Evening: enjoy a local dinner and a relaxed walk in a central area."
+            f"Morning: visit {morning['name']} ({morning['type']}) for 1.5-2 hours; focus on {interests}. Transport: walk or short ride from your hotel.\n"
+            f"Afternoon: spend 2-3 hours around {afternoon['name']} ({afternoon['type']}) with time for photos, local food, or a guided visit. Transport: public transport or taxi if it is far.\n"
+            f"Evening: go near {evening['name']} ({evening['type']}) for dinner and a relaxed walk in a lively central area."
         )
-    rows.append("Budget tip: keep about 40% of your budget for accommodation and use the rest for food, transport, and activities.")
+    rows.append("Rainy-day alternative: choose a museum, gallery, covered market, or cafe area from the plan and move outdoor walks to the clearest part of the day.")
+    rows.append("Budget tip: keep about 40% of your budget for accommodation and use the rest for food, transport, tickets, and activities.")
     return "\n\n".join(rows)
+
+
+def fetch_osm_places(place):
+    query = f"""
+    [out:json][timeout:12];
+    (
+      node["tourism"~"attraction|museum|gallery|viewpoint|zoo|aquarium"](around:8000,{place["lat"]},{place["lon"]});
+      way["tourism"~"attraction|museum|gallery|viewpoint|zoo|aquarium"](around:8000,{place["lat"]},{place["lon"]});
+      relation["tourism"~"attraction|museum|gallery|viewpoint|zoo|aquarium"](around:8000,{place["lat"]},{place["lon"]});
+      node["historic"](around:8000,{place["lat"]},{place["lon"]});
+      way["historic"](around:8000,{place["lat"]},{place["lon"]});
+      relation["historic"](around:8000,{place["lat"]},{place["lon"]});
+      node["leisure"~"park|garden|nature_reserve"](around:8000,{place["lat"]},{place["lon"]});
+      way["leisure"~"park|garden|nature_reserve"](around:8000,{place["lat"]},{place["lon"]});
+      relation["leisure"~"park|garden|nature_reserve"](around:8000,{place["lat"]},{place["lon"]});
+      node["amenity"~"marketplace|theatre|arts_centre"](around:8000,{place["lat"]},{place["lon"]});
+      way["amenity"~"marketplace|theatre|arts_centre"](around:8000,{place["lat"]},{place["lon"]});
+      relation["amenity"~"marketplace|theatre|arts_centre"](around:8000,{place["lat"]},{place["lon"]});
+    );
+    out center tags 30;
+    """
+    try:
+        response = requests.post(
+            "https://overpass-api.de/api/interpreter",
+            data={"data": query},
+            headers=HTTP_HEADERS,
+            timeout=16,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except (requests.RequestException, ValueError):
+        return []
+
+    places = []
+    seen = set()
+    for item in data.get("elements", []):
+        tags = item.get("tags", {})
+        name = clean_text(tags.get("name"))
+        if not name or name.lower() in seen:
+            continue
+        seen.add(name.lower())
+        place_type = (
+            tags.get("tourism")
+            or tags.get("historic")
+            or tags.get("leisure")
+            or tags.get("amenity")
+            or "place"
+        )
+        places.append({
+            "name": name,
+            "type": clean_text(place_type).replace("_", " ").title(),
+        })
+    return places[:18]
+
+
+def format_place_lines(places):
+    if not places:
+        return "- No live place list found. Use well-known real places for the destination and avoid fake names."
+    return "\n".join(f"- {place['name']} ({place['type']})" for place in places[:18])
 
 
 def ask_gemini(prompt):
