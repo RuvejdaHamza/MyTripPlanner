@@ -96,9 +96,12 @@
     document.getElementById("results").style.display = "none";
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
       const res = await fetch("/api/trip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           destination: destination,
           days: document.getElementById("days").value,
@@ -107,6 +110,12 @@
           nights: document.getElementById("nights").value
         })
       });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Server returned ${res.status}: ${errorText.slice(0, 300)}`);
+      }
 
       const data = await res.json();
 
@@ -115,14 +124,14 @@
 
       renderMap(data.coords.lat, data.coords.lon, data.destination);
 
-      document.getElementById("weather-result").innerHTML = data.weather.replace(/\n/g, "<br>");
-      document.getElementById("itinerary-result").innerHTML = data.itinerary.replace(/\n/g, "<br>");
+      document.getElementById("weather-result").innerHTML = formatGeneratedText(data.weather);
+      document.getElementById("itinerary-result").innerHTML = formatGeneratedText(data.itinerary);
 
       renderHotels(data.hotels, data.budget, data.days);
 
     } catch (err) {
       document.getElementById("loading").style.display = "none";
-      alert("Something went wrong. Check your connection and try again.");
+      alert("Something went wrong while generating the plan. Check the server terminal for details.");
       console.error(err);
     } finally {
       btn.disabled = false;
@@ -201,6 +210,12 @@
       "\"": "&quot;",
       "'": "&#039;"
     }[char]));
+  }
+
+  function formatGeneratedText(value) {
+    return escapeHtml(value)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br>");
   }
 
   function toggleOtherInterest() {
