@@ -1,0 +1,1 @@
+"""Hotel service logic."""
