@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}MyTripPlanner — Planifiko Udhëtimin{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ─────────────────────────────── -->
+<section class="hero">
+  <div class="hero-tag">✦ Powered by Gemini AI</div>
+
+  <h1>Udhëto me <em>stil,</em><br>planifiko me AI.</h1>
+
+  <p>Fut destinacionin dhe buxhetin — brenda sekondave merr itinerarin, hotelet dhe këshillat për udhëtimin tënd.</p>
+
+  <div class="hero-actions">
+    <a href="/trip" class="btn-primary">Fillo Planifikimin →</a>
+    <a href="/chat" class="btn-ghost">Chat me AI</a>
+  </div>
+</section>
+
+<!-- ── FEATURES ──────────────────────────── -->
+<section class="features-section">
+  <div class="features-label">✦ Çfarë ofron</div>
+  <div class="features-grid">
+
+    <a href="/trip" class="feature-card">
+      <span class="feature-icon">🗺️</span>
+      <span class="feature-arrow">↗</span>
+      <h3>Itinerar AI</h3>
+      <p>Plani ditor i personalizuar bazuar në interesat dhe numrin e ditëve.</p>
+    </a>
+
+    <a href="/trip" class="feature-card">
+      <span class="feature-icon">🏨</span>
+      <span class="feature-arrow">↗</span>
+      <h3>Hotele sipas Buxhetit</h3>
+      <p>Rekomandimet më të mira brenda buxhetit tënd — 40% e buxhetit total.</p>
+    </a>
+
+    <a href="/chat" class="feature-card">
+      <span class="feature-icon">💬</span>
+      <span class="feature-arrow">↗</span>
+      <h3>Travel Assistant</h3>
+      <p>Pyet çdo gjë — viza, transport, mot, kultura. Përgjigje të menjëhershme.</p>
+    </a>
+
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MyTripPlanner{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">MyTripPlanner</a>
+  <div class="nav-links">
+    <a href="/trip"  {% if active == 'trip'  %}class="active"{% endif %}>Planner</a>
+    <a href="/chat"  {% if active == 'chat'  %}class="active"{% endif %}>Chat</a>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+</body>
+</html>
