@@ -403,7 +403,7 @@ def ask_gemini(prompt):
     try:
         project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "mytriplanner")
         location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-        model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
         client = genai.Client(
             vertexai=True,
