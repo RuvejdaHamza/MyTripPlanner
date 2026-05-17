@@ -297,6 +297,8 @@ def fetch_osm_hotels(place):
 
 def get_itinerary(place, destination, days, nights, budget, interests, weather, hotels):
     hotel_names = ", ".join(hotel["name"] for hotel in hotels[:3])
+    places = fetch_osm_places(place)
+    place_lines = format_place_lines(places)
 
     prompt = (
         "Create a practical, personalized travel itinerary in English using real places and realistic activities.\n"
@@ -516,4 +518,4 @@ def clean_text(value):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001, use_reloader=False)
